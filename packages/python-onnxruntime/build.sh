@@ -34,13 +34,15 @@ termux_step_pre_configure() {
 
 	local TERMUX_PKG_SRCDIR_SAVE="$TERMUX_PKG_SRCDIR"
 	TERMUX_PKG_SRCDIR+="/cmake"
-	termux_step_configure_cmake
+	# termux_step_configure_cmake
+    # bash setup.sh --android
 	TERMUX_PKG_SRCDIR="$TERMUX_PKG_SRCDIR_SAVE"
 
-	cmake --build .
+	bash setup.sh --android
 }
 
 termux_step_make() {
+    # bash setup.sh --android
 	python -m build --wheel --no-isolation
 }
 
@@ -54,6 +56,6 @@ termux_step_create_debscripts() {
 	cat <<- EOF > ./postinst
 	#!$TERMUX_PREFIX/bin/sh
 	echo "Installing dependencies through pip..."
-	pip3 install onnxruntime
+	uv pip -v install onnxruntime
 	EOF
 }
