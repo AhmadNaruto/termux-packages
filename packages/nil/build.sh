@@ -1,6 +1,6 @@
 TERMUX_PKG_HOMEPAGE=https://github.com/oxalica/nil.git
 TERMUX_PKG_DESCRIPTION="NIx Language server, an incremental analysis assistant for writing in Nix."
-TERMUX_PKG_LICENSE="Apache-2, MIT"
+TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="@AhmadNaruto"
 TERMUX_PKG_VERSION="2025.06.13"
 TERMUX_PKG_SRCURL="https://github.com/oxalica/nil/archive/refs/tags/${TERMUX_PKG_VERSION//./-}.tar.gz"

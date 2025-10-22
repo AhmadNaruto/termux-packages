@@ -42,7 +42,7 @@ jobs:
     - name: Clone repository
       uses: actions/checkout@v5
       with:
-        fetch-depth: 1000
+        fetch-depth: 0
     - name: Set process id limit for 32-bit builds depending on aosp-libs
       run: echo 65535 | sudo tee /proc/sys/kernel/pid_max
     - name: Gather build summary
