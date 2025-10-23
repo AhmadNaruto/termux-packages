@@ -3,9 +3,9 @@ TERMUX_PKG_DESCRIPTION="A Rust compiler front-end for IDEs"
 TERMUX_PKG_LICENSE="Apache-2.0, MIT"
 TERMUX_PKG_LICENSE_FILE="LICENSE-APACHE, LICENSE-MIT"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="20250825"
-_VERSION=${TERMUX_PKG_VERSION:0:4}-${TERMUX_PKG_VERSION:4:2}-${TERMUX_PKG_VERSION:6:2}
-TERMUX_PKG_SRCURL=https://github.com/rust-lang/rust-analyzer/archive/refs/tags/${_VERSION}.tar.gz
+TERMUX_PKG_VERSION="2025.08.25"
+# _VERSION=${TERMUX_PKG_VERSION:0:4}-${TERMUX_PKG_VERSION:4:2}-${TERMUX_PKG_VERSION:6:2}
+TERMUX_PKG_SRCURL=https://github.com/rust-lang/rust-analyzer/archive/refs/tags/${TERMUX_PKG_VERSION//./-}.tar.gz
 TERMUX_PKG_SHA256=b48823d37f20fd9954c7105a1c0ce30c1a659319c65afa33555c59da5cee46d8
 TERMUX_PKG_DEPENDS="rust-src"
 TERMUX_PKG_ANTI_BUILD_DEPENDS="rust-src"
@@ -16,10 +16,14 @@ termux_pkg_auto_update() {
 	local e=0
 	local api_url="https://api.github.com/repos/rust-lang/rust-analyzer/tags"
 	local api_url_r=$(curl -s "${api_url}")
-	local r1=$(echo "${api_url_r}" | jq .[].name | sed -e 's|\"||g')
-	local latest_tag=$(echo "${r1}" | sed -nE 's/^([0-9]*-)/\1/p' | sort -V | tail -n1)
+	# local r1=$(echo "${api_url_r}" | jq .[].name | sed -e 's|\"||g')
+	# local latest_tag=$(echo "${r1}" | sed -nE 's/^([0-9]*-)/\1/p' | sort -V | tail -n1)
 	# https://github.com/termux/termux-packages/issues/18667
-	local latest_version=${latest_tag:0:4}${latest_tag:5:2}${latest_tag:8:2}
+	local r1=$(echo "${api_url_r}" | jq -r '.[].name' | sed -nE '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/p')
+	local latest_tag=$(echo "${r1}" | sort -V | tail -n1)
+	# local latest_version=${latest_tag:0:4}${latest_tag:5:2}${latest_tag:8:2}
+	local latest_version=${latest_tag//-/}
+
 	if [[ "${latest_version}" == "${TERMUX_PKG_VERSION}" ]]; then
 		echo "INFO: No update needed. Already at version '${TERMUX_PKG_VERSION}'."
 		return
