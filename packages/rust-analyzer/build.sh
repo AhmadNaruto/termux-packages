@@ -4,7 +4,6 @@ TERMUX_PKG_LICENSE="Apache-2.0, MIT"
 TERMUX_PKG_LICENSE_FILE="LICENSE-APACHE, LICENSE-MIT"
 TERMUX_PKG_MAINTAINER="@termux"
 TERMUX_PKG_VERSION="2025.08.25"
-# _VERSION=${TERMUX_PKG_VERSION:0:4}-${TERMUX_PKG_VERSION:4:2}-${TERMUX_PKG_VERSION:6:2}
 TERMUX_PKG_SRCURL=https://github.com/rust-lang/rust-analyzer/archive/refs/tags/${TERMUX_PKG_VERSION//./-}.tar.gz
 TERMUX_PKG_SHA256=b48823d37f20fd9954c7105a1c0ce30c1a659319c65afa33555c59da5cee46d8
 TERMUX_PKG_DEPENDS="rust-src"
@@ -16,13 +15,9 @@ termux_pkg_auto_update() {
 	local e=0
 	local api_url="https://api.github.com/repos/rust-lang/rust-analyzer/tags"
 	local api_url_r=$(curl -s "${api_url}")
-	# local r1=$(echo "${api_url_r}" | jq .[].name | sed -e 's|\"||g')
-	# local latest_tag=$(echo "${r1}" | sed -nE 's/^([0-9]*-)/\1/p' | sort -V | tail -n1)
-	# https://github.com/termux/termux-packages/issues/18667
 	local r1=$(echo "${api_url_r}" | jq -r '.[].name' | sed -nE '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/p')
 	local latest_tag=$(echo "${r1}" | sort -V | tail -n1)
-	# local latest_version=${latest_tag:0:4}${latest_tag:5:2}${latest_tag:8:2}
-	local latest_version=${latest_tag//-/}
+	local latest_version=${latest_tag//-/.}
 
 	if [[ "${latest_version}" == "${TERMUX_PKG_VERSION}" ]]; then
 		echo "INFO: No update needed. Already at version '${TERMUX_PKG_VERSION}'."
@@ -61,7 +56,25 @@ termux_step_pre_configure() {
 
 termux_step_make() {
 	export CFG_RELEASE=1
-	cargo build --jobs "${TERMUX_PKG_MAKE_PROCESSES}" --target "${CARGO_TARGET_NAME}" --release
+	local rust_flags=(
+		"-C opt-level=3"                    # Max performance (use 'z' for smaller size)
+		"-C lto=fat"                        # Full LTO - best optimization
+		"-C codegen-units=1"                # Single unit - better optimization
+		"-C embed-bitcode=yes"              # Enable better LTO
+		"-C panic=abort"                    # Remove panic unwinding (~10% smaller)
+		"-C strip=symbols"                  # Strip all symbols (~20% smaller)
+		"-C link-arg=-Wl,--gc-sections"     # Remove unused code sections
+		"-C link-arg=-Wl,--as-needed"       # Only link necessary libraries
+		"-C link-arg=-Wl,--strip-all"       # Additional strip (double insurance)
+	)
+
+	export RUSTFLAGS="${rust_flags[*]}"
+
+	cargo build \
+		--jobs "${TERMUX_PKG_MAKE_PROCESSES}" \
+		--target "${CARGO_TARGET_NAME}" \
+		--release \
+		--locked
 }
 
 termux_step_make_install() {
